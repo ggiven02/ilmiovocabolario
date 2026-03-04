@@ -17,19 +17,34 @@ export default async (request) => {
   try {
     const body = await request.json();
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const groqBody = {
+      model: 'llama-3.3-70b-versatile',
+      max_tokens: body.max_tokens || 2000,
+      messages: body.messages,
+    };
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(groqBody),
     });
 
     const data = await response.json();
 
-    return new Response(JSON.stringify(data), {
+    // Convert Groq response back to Anthropic format so the frontend needs no changes
+    const converted = {
+      content: [
+        {
+          type: 'text',
+          text: data.choices?.[0]?.message?.content || ''
+        }
+      ]
+    };
+
+    return new Response(JSON.stringify(converted), {
       status: response.status,
       headers: {
         'Content-Type': 'application/json',

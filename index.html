@@ -247,6 +247,40 @@ button.secondary:hover { border-color: var(--gold); color: var(--gold); }
 .reset-link { display:block; text-align:center; margin-top:1rem; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:#bba070; cursor:pointer; text-decoration:underline; }
 .reset-link:hover { color:var(--red); }
 
+/* WELCOME SCREEN */
+#welcome-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 2rem 1rem;
+}
+.welcome-box {
+  background: #fffdf5; border: 1px solid var(--parchment-dark); border-radius: 2px;
+  padding: 3rem 2.8rem; width: 100%; max-width: 420px; text-align: center;
+  box-shadow: 0 2px 8px var(--shadow), 0 12px 40px rgba(26,18,9,0.08), inset 0 0 0 6px rgba(232,223,200,0.4);
+  position: relative; animation: fadeUp 0.8s ease both;
+}
+.welcome-box::before {
+  content:''; position:absolute; top:10px; left:10px; right:10px; bottom:10px;
+  border: 1px solid rgba(184,134,11,0.18); pointer-events:none;
+}
+.welcome-ornament { font-size: 2rem; color: var(--gold); opacity: 0.7; margin-bottom: 0.5rem; }
+.welcome-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; color: var(--ink); }
+.welcome-sub { font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); margin-top: 0.4rem; }
+.welcome-question { font-size: 1.15rem; color: #3a2b14; margin-bottom: 0.9rem; }
+.name-input {
+  width: 100%; padding: 0.8rem 1rem; font-family: 'Crimson Pro', serif; font-size: 1.1rem;
+  border: 1px solid var(--parchment-dark); background: var(--parchment); color: var(--ink);
+  border-radius: 1px; outline: none; text-align: center; letter-spacing: 0.05em;
+  transition: border-color 0.2s;
+}
+.name-input:focus { border-color: var(--gold); }
+.name-input::placeholder { color: #bba070; }
+
+/* GREETING */
+.greeting {
+  font-family: 'Crimson Pro', serif; font-size: 0.88rem; font-style: italic;
+  color: #7a6040; text-align: center; margin-bottom: 1.2rem;
+}
+
 /* ANIMATIONS */
 @keyframes fadeDown { from { opacity:0; transform:translateY(-14px); } to { opacity:1; transform:translateY(0); } }
 @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
@@ -261,12 +295,26 @@ button.secondary:hover { border-color: var(--gold); color: var(--gold); }
 </style>
 </head>
 <body>
-<div class="container">
+<!-- WELCOME SCREEN -->
+<div id="welcome-screen">
+  <div class="welcome-box">
+    <div class="welcome-ornament">❧</div>
+    <h1 class="welcome-title">Benvenuto</h1>
+    <p class="welcome-sub">Il tuo vocabolario quotidiano</p>
+    <div class="divider" style="margin:1.4rem 0">· · ·</div>
+    <p class="welcome-question">Come ti chiami?</p>
+    <input type="text" id="nameInput" class="name-input" placeholder="Il tuo nome..." maxlength="30" />
+    <button class="primary" id="welcomeBtn" onclick="saveName()" style="margin-top:1.2rem;width:100%">Entra</button>
+  </div>
+</div>
+
+<div class="container" id="main-app" style="display:none">
 
   <header>
     <div class="label">Vocabolario quotidiano</div>
     <div class="ornament">❧ ❧ ❧</div>
     <div class="date-line" id="dateDisplay"></div>
+    <div class="greeting" id="greeting"></div>
   </header>
 
   <nav>
@@ -312,6 +360,35 @@ button.secondary:hover { border-color: var(--gold); color: var(--gold); }
 
 </div>
 <script>
+// ---- WELCOME ----
+function saveName() {
+  const input = document.getElementById('nameInput');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+  localStorage.setItem('vocabUserName', name);
+  showApp(name);
+}
+
+function showApp(name) {
+  document.getElementById('welcome-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  const hour = new Date().getHours();
+  const saluto = hour < 12 ? 'Buongiorno' : hour < 18 ? 'Buon pomeriggio' : 'Buonasera';
+  document.getElementById('greeting').textContent = `${saluto}, ${name}`;
+}
+
+// Check if name already saved
+const savedName = localStorage.getItem('vocabUserName');
+if (savedName) {
+  showApp(savedName);
+} else {
+  document.getElementById('welcome-screen').style.display = 'flex';
+  document.addEventListener('DOMContentLoaded', () => {
+    const inp = document.getElementById('nameInput');
+    if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
+  });
+}
+
 const state = {
   usedWords: [],
   currentWord: null,

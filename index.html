@@ -349,7 +349,7 @@ Rispondi SOLO con JSON valido, senza markdown né backtick:
 - esempi: 2 frasi d'uso naturali
 - nota: curiosità letteraria o semantica`;
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("/api/claude", {
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000,
         messages:[{role:"user",content:prompt}] })
@@ -499,7 +499,7 @@ Rispondi SOLO con JSON valido senza markdown:
 - corretta: indice 0/1/2
 - spiegazione: 1 frase`;
     }
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("/api/claude", {
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2000,
         messages:[{role:"user",content:prompt}] })

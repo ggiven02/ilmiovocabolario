@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parola del Giorno</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink: #1a1209; --parchment: #f5eedc; --parchment-dark: #e8dfc8;
+  --gold: #b8860b; --gold-light: #d4a017; --red: #8b1a1a;
+  --green: #2d6a2d; --shadow: rgba(26,18,9,0.15);
+}
+body {
+  background: var(--parchment);
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(184,134,11,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(139,26,26,0.05) 0%, transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  color: var(--ink); font-family: 'Crimson Pro', serif;
+  min-height: 100vh; padding: 2rem 1rem 4rem;
+}
+.container { width: 100%; max-width: 680px; margin: 0 auto; }
+
+/* NAV */
+nav {
+  display: flex; justify-content: center; gap: 0;
+  margin-bottom: 2.5rem; border: 1px solid var(--parchment-dark);
+  border-radius: 2px; overflow: hidden; background: #fffdf5;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.nav-btn {
+  flex: 1; background: transparent; color: #7a6040; border: none; border-radius: 0;
+  font-family: 'Crimson Pro', serif; font-size: 0.76rem; letter-spacing: 0.16em;
+  text-transform: uppercase; padding: 0.85rem 0.5rem;
+  cursor: pointer; transition: background 0.2s, color 0.2s;
+  border-right: 1px solid var(--parchment-dark);
+}
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { background: var(--parchment); color: var(--ink); }
+.nav-btn.active { background: var(--ink); color: var(--parchment); }
+.badge {
+  display: inline-block; background: var(--gold); color: #fff;
+  font-size: 0.65rem; border-radius: 8px; padding: 0 5px;
+  margin-left: 4px; vertical-align: middle; letter-spacing: 0;
+}
+
+/* HEADER */
+header { text-align: center; margin-bottom: 2rem; animation: fadeDown 0.7s ease both; }
+.label { font-size: 0.78rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--gold); }
+.ornament { color: var(--gold); font-size: 1rem; letter-spacing: 0.5em; margin: 0.5rem 0; opacity: 0.65; }
+.date-line { font-size: 0.82rem; letter-spacing: 0.12em; color: #6b5733; font-style: italic; }
+
+/* CARD */
+.card {
+  background: #fffdf5; border: 1px solid var(--parchment-dark); border-radius: 2px;
+  padding: 2.8rem 3rem;
+  box-shadow: 0 2px 8px var(--shadow), 0 12px 40px rgba(26,18,9,0.08), inset 0 0 0 6px rgba(232,223,200,0.4);
+  position: relative; animation: fadeUp 0.8s ease 0.15s both;
+}
+.card::before {
+  content: ''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
+  border: 1px solid rgba(184,134,11,0.18); pointer-events: none;
+}
+
+/* WORD */
+.word-section { text-align: center; margin-bottom: 1.6rem; }
+.word { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem,6vw,3.2rem); font-weight: 700; color: var(--ink); line-height: 1.1; }
+.category { font-size: 0.76rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); margin-top: 0.4rem; font-style: italic; }
+.pronunciation { font-size: 1rem; color: #5a4020; letter-spacing: 0.12em; margin-top: 0.3rem; font-variant: small-caps; }
+.etymology { font-size: 0.86rem; color: #7a6040; font-style: italic; margin-top: 0.3rem; }
+.divider { text-align: center; color: var(--gold); font-size: 0.8rem; letter-spacing: 0.4em; margin: 1.3rem 0; opacity: 0.55; }
+.section-label { font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.45rem; }
+.definition { font-size: 1.15rem; line-height: 1.65; color: #2a1f10; font-weight: 300; }
+.examples { margin-top: 1.5rem; }
+.example { display: flex; gap: 0.8rem; margin-bottom: 0.75rem; align-items: flex-start; }
+.example-num { font-family: 'Playfair Display', serif; font-size: 0.73rem; color: var(--gold); margin-top: 0.25rem; flex-shrink: 0; opacity: 0.8; }
+.example-text { font-size: 1.03rem; line-height: 1.6; color: #3a2b14; font-style: italic; }
+.note { margin-top: 1.5rem; padding: 1rem 1.2rem; background: rgba(232,223,200,0.35); border-left: 2px solid var(--gold-light); font-size: 0.96rem; line-height: 1.6; color: #4a3820; }
+
+/* FAV BTN */
+.fav-row { display: flex; justify-content: flex-end; margin-top: 1.4rem; }
+.fav-btn {
+  background: none; border: 1px solid var(--parchment-dark); color: #7a6040;
+  font-family: 'Crimson Pro', serif; font-size: 0.78rem; letter-spacing: 0.15em;
+  text-transform: uppercase; padding: 0.5rem 1rem; cursor: pointer;
+  transition: all 0.2s; border-radius: 1px;
+}
+.fav-btn:hover { border-color: var(--gold); color: var(--gold); }
+.fav-btn.saved { background: var(--gold); border-color: var(--gold); color: #fff; }
+
+/* BUTTONS */
+.btn-wrap { text-align: center; margin-top: 1.8rem; display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; }
+button.primary {
+  background: var(--ink); color: var(--parchment); border: none;
+  font-family: 'Crimson Pro', serif; font-size: 0.83rem; letter-spacing: 0.18em;
+  text-transform: uppercase; padding: 0.8rem 2.2rem;
+  cursor: pointer; transition: background 0.2s, transform 0.15s; border-radius: 1px;
+}
+button.primary:hover { background: #2d2010; transform: translateY(-1px); }
+button.primary:active { transform: translateY(0); }
+button.primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+button.secondary {
+  background: transparent; color: var(--ink); border: 1px solid var(--parchment-dark);
+  font-family: 'Crimson Pro', serif; font-size: 0.83rem; letter-spacing: 0.18em;
+  text-transform: uppercase; padding: 0.8rem 2.2rem;
+  cursor: pointer; transition: all 0.2s; border-radius: 1px;
+}
+button.secondary:hover { border-color: var(--gold); color: var(--gold); }
+
+/* LOADING */
+.loading { text-align: center; padding: 2.5rem 0; }
+.loading-dots span { display: inline-block; width: 7px; height: 7px; background: var(--gold); border-radius: 50%; margin: 0 3px; animation: bounce 1.2s infinite ease-in-out; }
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+.loading p { margin-top: 1rem; color: #7a6040; font-style: italic; font-size: 1rem; }
+.error { text-align: center; color: var(--red); font-style: italic; font-size: 1rem; padding: 1.5rem 0; }
+
+/* FAVORITES */
+.section-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.6rem; }
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--parchment-dark); }
+.fav-list { display: flex; flex-direction: column; gap: 0.9rem; }
+.fav-item {
+  background: #fffdf5; border: 1px solid var(--parchment-dark);
+  padding: 1.2rem 1.5rem; display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 1rem; cursor: pointer; transition: border-color 0.2s; border-radius: 1px;
+}
+.fav-item:hover { border-color: var(--gold); }
+.fav-item-word { font-family: 'Playfair Display', serif; font-size: 1.25rem; color: var(--ink); }
+.fav-item-cat { font-size: 0.74rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--red); font-style: italic; margin-top: 0.2rem; }
+.fav-item-def { font-size: 0.92rem; color: #5a4020; margin-top: 0.3rem; line-height: 1.5; }
+.fav-remove { background: none; border: none; color: #bba070; cursor: pointer; font-size: 1rem; padding: 0.2rem; flex-shrink: 0; transition: color 0.2s; }
+.fav-remove:hover { color: var(--red); }
+.empty-state { text-align: center; padding: 3rem 1rem; color: #8a7050; font-style: italic; font-size: 1.05rem; line-height: 1.7; }
+
+/* QUIZ */
+.quiz-setup { text-align: center; padding: 0.5rem 0; }
+.quiz-setup p { color: #5a4020; font-size: 1.03rem; line-height: 1.6; margin-bottom: 1.4rem; }
+.quiz-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1.4rem; }
+.quiz-type-btn {
+  background: #fffdf5; border: 1px solid var(--parchment-dark);
+  padding: 1.2rem 1rem; cursor: pointer; text-align: center;
+  transition: all 0.2s; border-radius: 1px; font-family: 'Crimson Pro', serif;
+}
+.quiz-type-btn:hover { border-color: var(--gold); }
+.quiz-type-btn.selected { border-color: var(--gold); background: rgba(184,134,11,0.07); }
+.qt-icon { font-size: 1.5rem; margin-bottom: 0.35rem; }
+.qt-label { font-size: 0.82rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); }
+.qt-desc { font-size: 0.86rem; color: #7a6040; margin-top: 0.2rem; font-style: italic; }
+.quiz-progress { display: flex; justify-content: space-between; font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.6rem; }
+.progress-bar { height: 3px; background: var(--parchment-dark); border-radius: 2px; margin-bottom: 1.5rem; }
+.progress-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.4s ease; }
+.quiz-question { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--ink); margin-bottom: 1.4rem; line-height: 1.45; }
+.quiz-question .qword { font-style: italic; color: var(--red); }
+.options { display: flex; flex-direction: column; gap: 0.65rem; }
+.option-btn {
+  background: #fffdf5; border: 1px solid var(--parchment-dark); text-align: left;
+  padding: 0.85rem 1.2rem; font-family: 'Crimson Pro', serif; font-size: 1.03rem;
+  cursor: pointer; transition: all 0.2s; border-radius: 1px;
+  display: flex; align-items: center; gap: 0.8rem; color: var(--ink); width: 100%;
+}
+.option-btn:hover:not(:disabled) { border-color: var(--gold); background: rgba(184,134,11,0.04); }
+.option-btn .opt-letter { font-family: 'Playfair Display', serif; font-size: 0.83rem; color: var(--gold); font-weight: 700; flex-shrink: 0; width: 1.1rem; }
+.option-btn.correct { border-color: var(--green); background: rgba(45,106,45,0.07); color: var(--green); }
+.option-btn.correct .opt-letter { color: var(--green); }
+.option-btn.wrong { border-color: var(--red); background: rgba(139,26,26,0.06); color: var(--red); }
+.option-btn.wrong .opt-letter { color: var(--red); }
+.option-btn:disabled { cursor: default; }
+.quiz-feedback { margin-top: 1.1rem; padding: 0.85rem 1.1rem; border-radius: 1px; font-size: 0.96rem; line-height: 1.55; }
+.quiz-feedback.correct { background: rgba(45,106,45,0.08); border-left: 2px solid var(--green); color: #1d4d1d; }
+.quiz-feedback.wrong { background: rgba(139,26,26,0.07); border-left: 2px solid var(--red); color: #5a1010; }
+
+/* SCORE */
+.score-display { text-align: center; }
+.score-circle {
+  width: 118px; height: 118px; border-radius: 50%; border: 3px solid var(--gold);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin: 0 auto 1.2rem; background: rgba(184,134,11,0.05);
+}
+.score-num { font-family: 'Playfair Display', serif; font-size: 2.3rem; font-weight: 700; color: var(--ink); line-height: 1; }
+.score-sub-label { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-top: 0.2rem; }
+.score-title { font-family: 'Playfair Display', serif; font-size: 1.45rem; margin-bottom: 0.4rem; }
+.score-subtitle { font-size: 0.98rem; color: #5a4020; font-style: italic; margin-bottom: 1.4rem; }
+.score-breakdown { text-align: left; }
+.score-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--parchment-dark); font-size: 0.96rem; }
+.score-row:last-child { border-bottom: none; }
+.sr-word { font-family: 'Playfair Display', serif; font-style: italic; }
+.sr-ok { color: var(--green); } .sr-no { color: var(--red); }
+
+/* STATS */
+.stats-hero {
+  background: #fffdf5; border: 1px solid var(--parchment-dark); border-radius: 2px;
+  padding: 2rem 2.2rem; margin-bottom: 1.2rem; text-align: center; position: relative;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.stats-hero::before {
+  content:''; position:absolute; top:8px; left:8px; right:8px; bottom:8px;
+  border: 1px solid rgba(184,134,11,0.15); pointer-events:none;
+}
+.stats-level { font-family:'Playfair Display',serif; font-size:1.9rem; font-weight:700; color:var(--ink); margin-bottom:0.25rem; }
+.stats-level-label { font-size:0.72rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--gold); margin-bottom:0.8rem; }
+.stats-avg-wrap { display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-bottom:0.6rem; }
+.stats-avg { font-family:'Playfair Display',serif; font-size:3rem; font-weight:700; color:var(--ink); line-height:1; }
+.stats-avg-sub { font-size:0.75rem; letter-spacing:0.12em; text-transform:uppercase; color:#7a6040; }
+.stats-trend { font-size:0.9rem; font-style:italic; color:#5a4020; margin-top:0.3rem; }
+.stats-trend.up { color: var(--green); }
+.stats-trend.down { color: var(--red); }
+.stats-trend.flat { color: var(--gold); }
+
+.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.9rem; margin-bottom:1.2rem; }
+.stat-card {
+  background:#fffdf5; border:1px solid var(--parchment-dark); border-radius:2px;
+  padding:1.1rem 1.2rem; text-align:center;
+}
+.stat-card-num { font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:700; color:var(--ink); }
+.stat-card-label { font-size:0.7rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--gold); margin-top:0.2rem; }
+
+.stats-history { background:#fffdf5; border:1px solid var(--parchment-dark); border-radius:2px; padding:1.4rem 1.6rem; margin-bottom:1.2rem; }
+.stats-history-title { font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:1rem; }
+.chart-bars { display:flex; align-items:flex-end; gap:6px; height:70px; }
+.chart-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; }
+.chart-bar {
+  width:100%; border-radius:1px 1px 0 0;
+  transition: height 0.6s ease;
+  min-height: 3px;
+}
+.chart-bar.hi { background: var(--green); }
+.chart-bar.mid { background: var(--gold); }
+.chart-bar.lo { background: var(--red); }
+.chart-bar-val { font-size:0.65rem; color:#7a6040; }
+.chart-axis { height:1px; background:var(--parchment-dark); margin-top:4px; }
+
+.stats-history-row { display:flex; justify-content:space-between; align-items:center; padding:0.45rem 0; border-bottom:1px solid var(--parchment-dark); font-size:0.93rem; }
+.stats-history-row:last-child { border-bottom:none; }
+.shr-date { color:#7a6040; font-style:italic; font-size:0.85rem; }
+.shr-type { font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:#9a7a40; }
+.shr-score { font-family:'Playfair Display',serif; font-size:1rem; }
+.shr-score.hi { color:var(--green); } .shr-score.mid { color:var(--gold-light); } .shr-score.lo { color:var(--red); }
+
+.stats-empty { text-align:center; padding:3rem 1rem; color:#8a7050; font-style:italic; font-size:1.05rem; line-height:1.7; }
+.reset-link { display:block; text-align:center; margin-top:1rem; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:#bba070; cursor:pointer; text-decoration:underline; }
+.reset-link:hover { color:var(--red); }
+
+/* ANIMATIONS */
+@keyframes fadeDown { from { opacity:0; transform:translateY(-14px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+@keyframes bounce { 0%,80%,100% { transform:scale(0.6); opacity:0.5; } 40% { transform:scale(1); opacity:1; } }
+@keyframes reveal { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.anim { animation: reveal 0.5s ease both; }
+
+@media (max-width:520px) {
+  .card { padding: 2rem 1.4rem; }
+  .quiz-type-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="label">Vocabolario quotidiano</div>
+    <div class="ornament">❧ ❧ ❧</div>
+    <div class="date-line" id="dateDisplay"></div>
+  </header>
+
+  <nav>
+    <button class="nav-btn active" onclick="showSection('word')" id="nav-word">📖 Parola</button>
+    <button class="nav-btn" onclick="showSection('favs')" id="nav-favs">★ Preferiti <span class="badge" id="fav-badge">0</span></button>
+    <button class="nav-btn" onclick="showSection('quiz')" id="nav-quiz">✎ Quiz</button>
+    <button class="nav-btn" onclick="showSection('stats')" id="nav-stats">◎ Stats</button>
+  </nav>
+
+  <!-- WORD -->
+  <div id="section-word">
+    <div class="card">
+      <div id="content">
+        <div class="loading">
+          <div class="loading-dots"><span></span><span></span><span></span></div>
+          <p>Ricercando una parola rara…</p>
+        </div>
+      </div>
+    </div>
+    <div class="btn-wrap">
+      <button class="primary" id="newWordBtn" onclick="loadWord()" disabled>Un'altra parola</button>
+    </div>
+  </div>
+
+  <!-- FAVORITES -->
+  <div id="section-favs" style="display:none">
+    <div class="section-title">Parole preferite</div>
+    <div id="fav-list-container"></div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="section-quiz" style="display:none">
+    <div class="card">
+      <div id="quiz-content"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div id="section-stats" style="display:none">
+    <div class="section-title">Le tue statistiche</div>
+    <div id="stats-container"></div>
+  </div>
+
+</div>
+<script>
+const state = {
+  usedWords: [],
+  currentWord: null,
+  favorites: JSON.parse(localStorage.getItem('vocabFavs') || '[]'),
+  quizHistory: JSON.parse(localStorage.getItem('vocabQuizHistory') || '[]'),
+  quiz: { active: false, questions: [], current: 0, answers: [], type: null }
+};
+
+// Init
+document.getElementById('dateDisplay').textContent =
+  new Date().toLocaleDateString('it-IT', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+updateBadge();
+loadWord();
+
+function showSection(id) {
+  ['word','favs','quiz','stats'].forEach(s => {
+    document.getElementById('section-'+s).style.display = s===id ? 'block' : 'none';
+    document.getElementById('nav-'+s).classList.toggle('active', s===id);
+  });
+  if (id==='favs') renderFavs();
+  if (id==='quiz') renderQuizSetup();
+  if (id==='stats') renderStats();
+}
+
+// ---- WORD ----
+async function loadWord() {
+  const btn = document.getElementById('newWordBtn');
+  if (btn) btn.disabled = true;
+  document.getElementById('content').innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div><p>Ricercando una parola rara…</p></div>`;
+  const avoid = state.usedWords.slice(-12).join(', ');
+  const prompt = `Sei un lessicografo italiano esperto. Scegli UNA parola italiana rara, arcaica, letteraria o poco usata nel parlato quotidiano.${avoid ? ' Non usare: '+avoid+'.' : ''}
+
+Rispondi SOLO con JSON valido, senza markdown né backtick:
+{"parola":"...","pronuncia":"...","categoria":"...","etimologia":"...","definizione":"...","esempi":["...","..."],"nota":"..."}
+
+- pronuncia: sillabata con accento tonico (es. "à-ne-li-to"). Accento acuto sulla vocale tonica. Sillabe separate da trattino.
+- categoria: es. "aggettivo", "sostantivo maschile"
+- etimologia: breve nota
+- definizione: 1-2 frasi
+- esempi: 2 frasi d'uso naturali
+- nota: curiosità letteraria o semantica`;
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000,
+        messages:[{role:"user",content:prompt}] })
+    });
+    const data = await res.json();
+    const word = JSON.parse(data.content.map(b=>b.text||'').join('').trim().replace(/```json|```/g,'').trim());
+    state.currentWord = word;
+    state.usedWords.push(word.parola);
+    renderWord(word);
+  } catch(e) {
+    document.getElementById('content').innerHTML = `<div class="error">Non è stato possibile caricare la parola.<br>Riprova tra un momento.</div>`;
+  } finally {
+    const b = document.getElementById('newWordBtn');
+    if (b) b.disabled = false;
+  }
+}
+
+function renderWord(w) {
+  const saved = state.favorites.some(f=>f.parola===w.parola);
+  document.getElementById('content').innerHTML = `
+    <div class="anim">
+      <div class="word-section">
+        <div class="word">${w.parola}</div>
+        <div class="category">${w.categoria}</div>
+        ${w.pronuncia ? `<div class="pronunciation">${w.pronuncia}</div>` : ''}
+        <div class="etymology">${w.etimologia}</div>
+      </div>
+      <div class="divider">· · ·</div>
+      <div><div class="section-label">Definizione</div><div class="definition">${w.definizione}</div></div>
+      <div class="examples">
+        <div class="section-label">Esempi d'uso</div>
+        ${w.esempi.map((e,i)=>`<div class="example"><span class="example-num">${i+1}.</span><span class="example-text">${e}</span></div>`).join('')}
+      </div>
+      ${w.nota ? `<div class="note">${w.nota}</div>` : ''}
+      <div class="fav-row">
+        <button class="fav-btn ${saved?'saved':''}" onclick="toggleFav()" id="favBtn">
+          ${saved ? '★ Nei preferiti' : '☆ Aggiungi ai preferiti'}
+        </button>
+      </div>
+    </div>`;
+}
+
+function toggleFav() {
+  if (!state.currentWord) return;
+  const w = state.currentWord;
+  const idx = state.favorites.findIndex(f=>f.parola===w.parola);
+  if (idx>=0) state.favorites.splice(idx,1); else state.favorites.push(w);
+  localStorage.setItem('vocabFavs', JSON.stringify(state.favorites));
+  updateBadge();
+  const saved = state.favorites.some(f=>f.parola===w.parola);
+  const btn = document.getElementById('favBtn');
+  if (btn) { btn.textContent = saved ? '★ Nei preferiti' : '☆ Aggiungi ai preferiti'; btn.classList.toggle('saved',saved); }
+}
+
+function updateBadge() {
+  const b = document.getElementById('fav-badge');
+  if (b) b.textContent = state.favorites.length;
+}
+
+// ---- FAVORITES ----
+function renderFavs() {
+  const c = document.getElementById('fav-list-container');
+  if (!state.favorites.length) {
+    c.innerHTML = `<div class="empty-state">Nessuna parola nei preferiti ancora.<br>Esplora la parola del giorno e salva quelle che ti piacciono.</div>`;
+    return;
+  }
+  c.innerHTML = `<div class="fav-list">${state.favorites.map((w,i)=>`
+    <div class="fav-item" onclick="openFavWord(${i})">
+      <div>
+        <div class="fav-item-word">${w.parola}</div>
+        <div class="fav-item-cat">${w.categoria}${w.pronuncia?' · '+w.pronuncia:''}</div>
+        <div class="fav-item-def">${w.definizione.length>100?w.definizione.slice(0,97)+'…':w.definizione}</div>
+      </div>
+      <button class="fav-remove" onclick="removeFav(event,${i})" title="Rimuovi">✕</button>
+    </div>`).join('')}</div>`;
+}
+
+function removeFav(e,i) {
+  e.stopPropagation();
+  state.favorites.splice(i,1);
+  localStorage.setItem('vocabFavs', JSON.stringify(state.favorites));
+  updateBadge(); renderFavs();
+}
+
+function openFavWord(i) {
+  state.currentWord = state.favorites[i];
+  showSection('word');
+  renderWord(state.currentWord);
+}
+
+// ---- QUIZ ----
+function renderQuizSetup() {
+  const hasEnough = state.favorites.length >= 3;
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="anim quiz-setup">
+      <div class="section-label" style="text-align:center;margin-bottom:0.8rem">Scegli il tipo di quiz</div>
+      <p>Vuoi mettere alla prova le parole che hai imparato, o esplorare il vocabolario italiano in generale?</p>
+      <div class="quiz-type-grid">
+        <button class="quiz-type-btn" onclick="${hasEnough?"selectQuizType('learned')":'showNeedMore()'}" id="qt-learned">
+          <div class="qt-icon">★</div>
+          <div class="qt-label">Parole imparate</div>
+          <div class="qt-desc">${hasEnough ? state.favorites.length+' parole nei preferiti' : 'Servono almeno 3 preferiti'}</div>
+        </button>
+        <button class="quiz-type-btn" onclick="selectQuizType('general')" id="qt-general">
+          <div class="qt-icon">📚</div>
+          <div class="qt-label">Vocabolario italiano</div>
+          <div class="qt-desc">Parole rare in generale</div>
+        </button>
+      </div>
+      <div id="quiz-msg" style="min-height:1.4rem;font-size:0.9rem;color:var(--red);font-style:italic;text-align:center"></div>
+    </div>`;
+}
+
+function showNeedMore() {
+  document.getElementById('quiz-msg').textContent = 'Aggiungi almeno 3 parole ai preferiti per usare questa modalità.';
+}
+
+function selectQuizType(type) {
+  document.querySelectorAll('.quiz-type-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('qt-'+type).classList.add('selected');
+  setTimeout(()=>startQuiz(type), 220);
+}
+
+async function startQuiz(type) {
+  state.quiz = { active:true, questions:[], current:0, answers:[], type };
+  document.getElementById('quiz-content').innerHTML = `<div class="loading"><div class="loading-dots"><span></span><span></span><span></span></div><p>Preparando le domande…</p></div>`;
+  try {
+    let prompt;
+    if (type==='learned') {
+      const words = state.favorites.slice(0,10);
+      const n = Math.min(words.length,10);
+      prompt = `Sei un professore di italiano. Crea un quiz su queste ${n} parole: ${words.map(w=>w.parola+': '+w.definizione).join(' | ')}.
+
+Genera esattamente ${n} domande a scelta multipla. Ogni domanda chiede il significato di una parola con 3 opzioni (A, B, C): una corretta, due plausibili ma errate. La risposta giusta deve stare in posizione casuale (non sempre prima).
+
+Rispondi SOLO con JSON valido senza markdown:
+{"domande":[{"parola":"...","opzioni":["...","...","..."],"corretta":0,"spiegazione":"..."}]}
+- corretta: indice 0/1/2 della risposta giusta
+- spiegazione: 1 frase che chiarisce il significato`;
+    } else {
+      prompt = `Sei un professore di italiano. Crea un quiz di 10 domande su parole italiane rare, letterarie o arcaiche (non parole comuni).
+
+Ogni domanda: 3 opzioni (A,B,C), una corretta. Le opzioni errate devono essere plausibili. La risposta giusta in posizione casuale.
+
+Rispondi SOLO con JSON valido senza markdown:
+{"domande":[{"parola":"...","opzioni":["...","...","..."],"corretta":0,"spiegazione":"..."}]}
+- corretta: indice 0/1/2
+- spiegazione: 1 frase`;
+    }
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2000,
+        messages:[{role:"user",content:prompt}] })
+    });
+    const data = await res.json();
+    const parsed = JSON.parse(data.content.map(b=>b.text||'').join('').trim().replace(/```json|```/g,'').trim());
+    state.quiz.questions = parsed.domande;
+    renderQuestion();
+  } catch(e) {
+    document.getElementById('quiz-content').innerHTML =
+      `<div class="error">Errore nel caricare il quiz. Riprova.</div>
+       <div class="btn-wrap"><button class="primary" onclick="renderQuizSetup()">Torna indietro</button></div>`;
+  }
+}
+
+function renderQuestion() {
+  const q = state.quiz.questions[state.quiz.current];
+  const total = state.quiz.questions.length;
+  const curr = state.quiz.current+1;
+  const letters = ['A','B','C','D'];
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="anim">
+      <div class="quiz-progress">
+        <span>Domanda ${curr} di ${total}</span>
+        <span>${state.quiz.answers.filter(a=>a.isCorrect).length} corrette</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${((curr-1)/total*100).toFixed(0)}%"></div></div>
+      <div class="quiz-question">La parola <span class="qword">${q.parola}</span> significa:</div>
+      <div class="options" id="options">
+        ${q.opzioni.map((opt,i)=>`
+          <button class="option-btn" onclick="selectAnswer(${i})" id="opt-${i}">
+            <span class="opt-letter">${letters[i]}</span><span>${opt}</span>
+          </button>`).join('')}
+      </div>
+      <div id="quiz-feedback"></div>
+      <div id="quiz-next"></div>
+    </div>`;
+}
+
+function selectAnswer(chosen) {
+  const q = state.quiz.questions[state.quiz.current];
+  const correct = q.corretta;
+  const isCorrect = chosen===correct;
+  document.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);
+  document.getElementById('opt-'+correct).classList.add('correct');
+  if (!isCorrect) document.getElementById('opt-'+chosen).classList.add('wrong');
+  state.quiz.answers.push({parola:q.parola, chosen, correct, isCorrect});
+  const fb = document.getElementById('quiz-feedback');
+  fb.className = 'quiz-feedback '+(isCorrect?'correct':'wrong');
+  fb.textContent = (isCorrect?'✓ Esatto! ':'✗ Sbagliato. ')+q.spiegazione;
+  const isLast = state.quiz.current >= state.quiz.questions.length-1;
+  document.getElementById('quiz-next').innerHTML =
+    `<div class="btn-wrap" style="margin-top:1rem">
+       <button class="primary" onclick="${isLast?'showScore()':'nextQuestion()'}">${isLast?'Vedi punteggio':'Prossima →'}</button>
+     </div>`;
+}
+
+function nextQuestion() { state.quiz.current++; renderQuestion(); }
+
+function showScore() {
+  const answers = state.quiz.answers;
+  const total = answers.length;
+  const correct = answers.filter(a=>a.isCorrect).length;
+  const score = Math.round((correct/total)*100);
+
+  // Save to history
+  const entry = {
+    date: new Date().toISOString(),
+    score,
+    correct,
+    total,
+    type: state.quiz.type
+  };
+  state.quizHistory.push(entry);
+  localStorage.setItem('vocabQuizHistory', JSON.stringify(state.quizHistory));
+
+  const titles = [[80,'Ottimo!','Conosci bene queste parole.'],[60,'Discreto','Buona base, ma c\'è ancora da imparare.'],[40,'Così così','Vale la pena ripassare i preferiti.'],[0,'Da rivedere','Non preoccuparti — è proprio per questo che si studia.']];
+  const [,title,subtitle] = score===100 ? [100,'Perfetto!','Vocabolario straordinario. Non ti sfugge nulla.'] : titles.find(([t])=>score>=t);
+  document.getElementById('quiz-content').innerHTML = `
+    <div class="anim score-display">
+      <div class="score-circle">
+        <div class="score-num">${score}</div>
+        <div class="score-sub-label">/ 100</div>
+      </div>
+      <div class="score-title">${title}</div>
+      <div class="score-subtitle">${correct} su ${total} corrette. ${subtitle}</div>
+      <div class="score-breakdown">
+        <div class="section-label" style="margin-bottom:0.6rem">Dettaglio</div>
+        ${answers.map(a=>`
+          <div class="score-row">
+            <span class="sr-word">${a.parola}</span>
+            <span class="${a.isCorrect?'sr-ok':'sr-no'}">${a.isCorrect?'✓ Corretta':'✗ Errata'}</span>
+          </div>`).join('')}
+      </div>
+      <div class="btn-wrap" style="margin-top:1.6rem">
+        <button class="primary" onclick="renderQuizSetup()">Nuovo quiz</button>
+        <button class="secondary" onclick="showSection('stats')">Vedi statistiche</button>
+      </div>
+    </div>`;
+}
+
+// ---- STATS ----
+function renderStats() {
+  const c = document.getElementById('stats-container');
+  const history = state.quizHistory;
+
+  if (!history.length) {
+    c.innerHTML = `<div class="stats-empty">Nessun quiz completato ancora.<br>Fai il tuo primo quiz per vedere le statistiche qui.</div>`;
+    return;
+  }
+
+  const totalQuizzes = history.length;
+  const allScores = history.map(h=>h.score);
+  const avg = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length);
+  const best = Math.max(...allScores);
+  const totalAnswered = history.reduce((a,h)=>a+h.total,0);
+  const totalCorrect = history.reduce((a,h)=>a+h.correct,0);
+  const globalPct = Math.round((totalCorrect/totalAnswered)*100);
+
+  // Trend: compare last 3 vs previous 3
+  let trendText = '', trendClass = 'flat';
+  if (history.length >= 4) {
+    const recent = allScores.slice(-3);
+    const older = allScores.slice(-6, -3);
+    if (older.length) {
+      const rAvg = recent.reduce((a,b)=>a+b,0)/recent.length;
+      const oAvg = older.reduce((a,b)=>a+b,0)/older.length;
+      const diff = Math.round(rAvg - oAvg);
+      if (diff > 4) { trendText = `↑ In miglioramento (+${diff} punti rispetto ai quiz precedenti)`; trendClass = 'up'; }
+      else if (diff < -4) { trendText = `↓ In calo (${diff} punti rispetto ai quiz precedenti)`; trendClass = 'down'; }
+      else { trendText = `→ Stabile (andamento costante negli ultimi quiz)`; trendClass = 'flat'; }
+    }
+  } else {
+    trendText = 'Fai almeno 4 quiz per vedere il trend';
+  }
+
+  // Level
+  let level, levelLabel;
+  if (avg >= 90) { level = 'Esperto'; levelLabel = 'Vocabolario eccellente'; }
+  else if (avg >= 75) { level = 'Avanzato'; levelLabel = 'Ottima padronanza'; }
+  else if (avg >= 60) { level = 'Intermedio'; levelLabel = 'Buona conoscenza'; }
+  else if (avg >= 40) { level = 'In crescita'; levelLabel = 'Continua ad esercitarti'; }
+  else { level = 'Principiante'; levelLabel = 'Stai iniziando il percorso'; }
+
+  // Bar chart (last 8)
+  const chartData = history.slice(-8);
+  const maxScore = 100;
+  const bars = chartData.map(h => {
+    const heightPct = Math.max(4, h.score);
+    const cls = h.score>=70?'hi':h.score>=45?'mid':'lo';
+    return `<div class="chart-bar-wrap">
+      <div class="chart-bar-val">${h.score}</div>
+      <div class="chart-bar ${cls}" style="height:${heightPct*0.65}px"></div>
+    </div>`;
+  }).join('');
+
+  // History rows (last 10, newest first)
+  const rows = [...history].reverse().slice(0,10).map(h => {
+    const d = new Date(h.date);
+    const dateStr = d.toLocaleDateString('it-IT',{day:'2-digit',month:'short'});
+    const cls = h.score>=70?'hi':h.score>=45?'mid':'lo';
+    const typeLabel = h.type==='learned'?'Preferiti':'Italiano';
+    return `<div class="stats-history-row">
+      <div>
+        <span class="shr-date">${dateStr}</span>
+        <span class="shr-type" style="margin-left:0.5rem">${typeLabel}</span>
+      </div>
+      <span class="shr-score ${cls}">${h.score}/100 <span style="font-family:'Crimson Pro',serif;font-size:0.82rem;opacity:0.7">(${h.correct}/${h.total})</span></span>
+    </div>`;
+  }).join('');
+
+  c.innerHTML = `
+    <div class="anim">
+      <div class="stats-hero">
+        <div class="stats-level-label">Livello</div>
+        <div class="stats-level">${level}</div>
+        <div style="font-size:0.85rem;color:#7a6040;font-style:italic;margin-bottom:0.9rem">${levelLabel}</div>
+        <div class="stats-avg-wrap">
+          <div>
+            <div class="stats-avg">${avg}</div>
+            <div class="stats-avg-sub">Media generale</div>
+          </div>
+        </div>
+        ${trendText ? `<div class="stats-trend ${trendClass}">${trendText}</div>` : ''}
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-num">${totalQuizzes}</div>
+          <div class="stat-card-label">Quiz completati</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-num">${best}</div>
+          <div class="stat-card-label">Miglior punteggio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-num">${totalCorrect}</div>
+          <div class="stat-card-label">Risposte corrette</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-num">${globalPct}%</div>
+          <div class="stat-card-label">Precisione totale</div>
+        </div>
+      </div>
+
+      ${chartData.length >= 2 ? `
+      <div class="stats-history">
+        <div class="stats-history-title">Ultimi ${chartData.length} quiz</div>
+        <div class="chart-bars">${bars}</div>
+        <div class="chart-axis"></div>
+      </div>` : ''}
+
+      <div class="stats-history">
+        <div class="stats-history-title">Storico quiz</div>
+        ${rows}
+      </div>
+
+      <span class="reset-link" onclick="resetStats()">Azzera statistiche</span>
+    </div>`;
+}
+
+function resetStats() {
+  if (!confirm('Sei sicuro di voler cancellare tutte le statistiche?')) return;
+  state.quizHistory = [];
+  localStorage.removeItem('vocabQuizHistory');
+  renderStats();
+}
+</script>
+</body>
+</html>

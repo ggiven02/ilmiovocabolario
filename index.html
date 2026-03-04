@@ -608,6 +608,20 @@ Rispondi SOLO con JSON valido, senza markdown né backtick:
     const word = JSON.parse(data.content.map(b=>b.text||'').join('').trim().replace(/```json|```/g,'').trim());
     state.currentWord = word;
     state.usedWords.push(word.parola);
+
+    // Try to verify pronunciation via Wiktionary
+    try {
+      const wikiRes = await fetch('/api/claude', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ wiktionary: word.parola })
+      });
+      const wikiData = await wikiRes.json();
+      if (wikiData.pronuncia) {
+        word.pronuncia = wikiData.pronuncia;
+        word.pronuncia_fonte = 'Wiktionary';
+      }
+    } catch(e) { /* fallback to AI pronunciation */ }
+
     renderWord(word);
   } catch(e) {
     document.getElementById('content').innerHTML = `<div class="error">Non è stato possibile caricare la parola.<br>Riprova tra un momento.</div>`;
@@ -624,7 +638,7 @@ function renderWord(w) {
       <div class="word-section">
         <div class="word">${w.parola.replace(/-/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')}</div>
         <div class="category">${w.categoria}</div>
-        ${w.pronuncia ? `<div class="pronunciation">${w.pronuncia}</div>` : ''}
+        ${w.pronuncia ? `<div class="pronunciation">${w.pronuncia}${w.pronuncia_fonte ? ` <span style="font-size:0.6rem;letter-spacing:0.15em;opacity:0.5;font-variant:normal;text-transform:uppercase"> · ${w.pronuncia_fonte}</span>` : ''}</div>` : ''}
         <div class="etymology">${w.etimologia}</div>
       </div>
       <div class="divider">· · ·</div>

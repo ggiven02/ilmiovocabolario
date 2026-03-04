@@ -72,9 +72,9 @@ header { text-align: center; margin-bottom: 2rem; animation: fadeDown 0.7s ease 
 /* WORD */
 .word-section { text-align: center; margin-bottom: 1.6rem; }
 .word { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem,6vw,3.2rem); font-weight: 700; color: var(--ink); line-height: 1.1; }
-.category { font-size: 0.76rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); margin-top: 0.4rem; font-style: italic; }
-.pronunciation { font-size: 1rem; color: #5a4020; letter-spacing: 0.12em; margin-top: 0.3rem; font-variant: small-caps; }
-.etymology { font-size: 0.86rem; color: #7a6040; font-style: italic; margin-top: 0.3rem; }
+.category { font-size: 0.88rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); margin-top: 0.5rem; font-style: italic; }
+.pronunciation { font-size: 1.2rem; color: #5a4020; letter-spacing: 0.15em; margin-top: 0.4rem; font-variant: small-caps; }
+.etymology { font-size: 1rem; color: #7a6040; font-style: italic; margin-top: 0.4rem; }
 .divider { text-align: center; color: var(--gold); font-size: 0.8rem; letter-spacing: 0.4em; margin: 1.3rem 0; opacity: 0.55; }
 .section-label { font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.45rem; }
 .definition { font-size: 1.15rem; line-height: 1.65; color: #2a1f10; font-weight: 300; }
@@ -622,7 +622,7 @@ function renderWord(w) {
   document.getElementById('content').innerHTML = `
     <div class="anim">
       <div class="word-section">
-        <div class="word">${w.parola}</div>
+        <div class="word">${w.parola.replace(/-/g, '')}</div>
         <div class="category">${w.categoria}</div>
         ${w.pronuncia ? `<div class="pronunciation">${w.pronuncia}</div>` : ''}
         <div class="etymology">${w.etimologia}</div>

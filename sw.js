@@ -1,28 +1,22 @@
-const CACHE_NAME = 'vocabolario-v1';
-const STATIC_ASSETS = ['/'];
+const CACHE_NAME = 'vocabolario-v2';
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
-  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+      Promise.all(keys.map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
-  // Non cachare le chiamate API
-  if (e.request.url.includes('/api/')) {
-    return;
-  }
+  // Non cachare niente — sempre rete fresca
+  if (e.request.url.includes('/api/')) return;
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request).catch(() => caches.match(e.request))
   );
 });

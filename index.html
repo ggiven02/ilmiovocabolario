@@ -545,9 +545,9 @@ function showApp(name) {
   document.getElementById('greeting').textContent = `${saluto}, ${name}`;
 }
 
-// Check if name already saved
-const savedName = localStorage.getItem('vocabUserName');
+// Always show splash on every page load
 runSplash(() => {
+  const savedName = localStorage.getItem('vocabUserName');
   if (savedName) {
     showApp(savedName);
   } else {

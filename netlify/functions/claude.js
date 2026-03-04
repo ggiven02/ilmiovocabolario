@@ -23,6 +23,9 @@ export default async (request) => {
       messages: body.messages,
     };
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -30,11 +33,13 @@ export default async (request) => {
         'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
       },
       body: JSON.stringify(groqBody),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeout);
 
     const data = await response.json();
 
-    // Convert Groq response back to Anthropic format so the frontend needs no changes
     const converted = {
       content: [
         {

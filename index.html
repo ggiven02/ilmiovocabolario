@@ -500,44 +500,24 @@ function runSplash(onComplete) {
   const pct = document.getElementById('splashPct');
   const factEl = document.getElementById('splashFact');
 
-  // Pick 2 random facts to show during loading
   const shuffled = [...facts].sort(() => Math.random() - 0.5);
-  let factIndex = 0;
+  factEl.innerHTML = shuffled[0];
 
-  function showFact(i) {
-    factEl.style.animation = 'none';
-    factEl.offsetHeight; // reflow
-    factEl.style.animation = 'factFade 0.5s ease both';
-    factEl.innerHTML = shuffled[i % shuffled.length];
-  }
-
-  showFact(0);
-
-  let current = 0;
-  const target = 100;
-  const duration = 2200; // ms total
+  let step = 0;
   const steps = 60;
+  const duration = 5000;
   const interval = duration / steps;
 
-  // Easing: fast at start, slow at end
-  let step = 0;
   const timer = setInterval(() => {
     step++;
-    // Ease out cubic
     const progress = step / steps;
     const eased = 1 - Math.pow(1 - progress, 3);
-    current = Math.round(eased * target);
+    const current = Math.round(eased * 100);
     fill.style.width = current + '%';
     pct.textContent = current + '%';
 
-    // Change fact halfway
-    if (step === Math.floor(steps * 0.55)) {
-      showFact(1);
-    }
-
     if (step >= steps) {
       clearInterval(timer);
-      current = 100;
       fill.style.width = '100%';
       pct.textContent = '100%';
       setTimeout(() => {

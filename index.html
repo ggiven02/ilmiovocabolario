@@ -247,6 +247,41 @@ button.secondary:hover { border-color: var(--gold); color: var(--gold); }
 .reset-link { display:block; text-align:center; margin-top:1rem; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:#bba070; cursor:pointer; text-decoration:underline; }
 .reset-link:hover { color:var(--red); }
 
+/* TRANSLATION */
+.translate-row {
+  display: flex; align-items: center; gap: 0.7rem; margin-top: 1.4rem;
+  padding-top: 1.2rem; border-top: 1px solid var(--parchment-dark);
+  flex-wrap: wrap;
+}
+.translate-label { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); flex-shrink: 0; }
+.lang-select {
+  font-family: 'Crimson Pro', serif; font-size: 0.92rem; color: var(--ink);
+  background: var(--parchment); border: 1px solid var(--parchment-dark);
+  padding: 0.35rem 0.7rem; border-radius: 1px; cursor: pointer;
+  transition: border-color 0.2s; outline: none; flex: 1; min-width: 140px;
+}
+.lang-select:focus { border-color: var(--gold); }
+.translate-btn {
+  background: none; border: 1px solid var(--parchment-dark); color: #7a6040;
+  font-family: 'Crimson Pro', serif; font-size: 0.78rem; letter-spacing: 0.15em;
+  text-transform: uppercase; padding: 0.38rem 0.9rem; cursor: pointer;
+  transition: all 0.2s; border-radius: 1px; flex-shrink: 0;
+}
+.translate-btn:hover { border-color: var(--gold); color: var(--gold); }
+.translate-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.translation-box {
+  margin-top: 1.2rem; padding: 1.1rem 1.3rem;
+  background: rgba(184,134,11,0.05); border: 1px solid rgba(184,134,11,0.2);
+  border-radius: 1px; animation: reveal 0.4s ease both;
+}
+.translation-lang { font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.6rem; }
+.translation-word { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--ink); margin-bottom: 0.3rem; }
+.translation-def { font-size: 1.05rem; line-height: 1.6; color: #2a1f10; font-weight: 300; margin-bottom: 0.8rem; }
+.translation-examples { font-size: 0.97rem; line-height: 1.6; color: #3a2b14; }
+.translation-example { display: flex; gap: 0.7rem; margin-bottom: 0.5rem; }
+.translation-example span:first-child { color: var(--gold); font-size: 0.73rem; margin-top: 0.25rem; flex-shrink: 0; }
+.translation-example span:last-child { font-style: italic; }
+
 /* WELCOME SCREEN */
 #welcome-screen {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
@@ -466,6 +501,29 @@ function renderWord(w) {
         ${w.esempi.map((e,i)=>`<div class="example"><span class="example-num">${i+1}.</span><span class="example-text">${e}</span></div>`).join('')}
       </div>
       ${w.nota ? `<div class="note">${w.nota}</div>` : ''}
+      <div class="translate-row">
+        <span class="translate-label">Traduci in</span>
+        <select class="lang-select" id="langSelect" onchange="document.getElementById('translateBtn').disabled=!this.value">
+          <option value="">— scegli una lingua —</option>
+          <option value="English">Inglese</option>
+          <option value="French">Francese</option>
+          <option value="Spanish">Spagnolo</option>
+          <option value="German">Tedesco</option>
+          <option value="Portuguese">Portoghese</option>
+          <option value="Chinese">Cinese</option>
+          <option value="Japanese">Giapponese</option>
+          <option value="Arabic">Arabo</option>
+          <option value="Russian">Russo</option>
+          <option value="Dutch">Olandese</option>
+          <option value="Polish">Polacco</option>
+          <option value="Turkish">Turco</option>
+          <option value="Hindi">Hindi</option>
+          <option value="Greek">Greco</option>
+          <option value="Swedish">Svedese</option>
+        </select>
+        <button class="translate-btn" id="translateBtn" onclick="translateWord()" disabled>Traduci</button>
+      </div>
+      <div id="translation-box"></div>
       <div class="fav-row">
         <button class="fav-btn ${saved?'saved':''}" onclick="toggleFav()" id="favBtn">
           ${saved ? '★ Nei preferiti' : '☆ Aggiungi ai preferiti'}
@@ -489,6 +547,53 @@ function toggleFav() {
 function updateBadge() {
   const b = document.getElementById('fav-badge');
   if (b) b.textContent = state.favorites.length;
+}
+
+async function translateWord() {
+  const lang = document.getElementById('langSelect').value;
+  if (!lang || !state.currentWord) return;
+  const w = state.currentWord;
+  const btn = document.getElementById('translateBtn');
+  const box = document.getElementById('translation-box');
+  btn.disabled = true;
+  btn.textContent = '…';
+  box.innerHTML = `<div class="loading" style="padding:1rem 0"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+
+  const prompt = `Traduci in ${lang} i seguenti contenuti relativi alla parola italiana "${w.parola}".
+
+Rispondi SOLO con JSON valido senza markdown:
+{"parola_tradotta":"...","definizione":"...","esempi":["...","..."]}
+
+Contenuti da tradurre:
+- Definizione: ${w.definizione}
+- Esempio 1: ${w.esempi[0]}
+- Esempio 2: ${w.esempi[1]}
+
+La "parola_tradotta" è l'equivalente di "${w.parola}" in ${lang} (se non esiste un equivalente preciso, usa una perifrasi breve).
+Traduci in modo naturale e fluente in ${lang}.`;
+
+  try {
+    const res = await fetch('/api/claude', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800,
+        messages: [{role: 'user', content: prompt}] })
+    });
+    const data = await res.json();
+    const t = JSON.parse(data.content.map(b=>b.text||'').join('').trim().replace(/```json|```/g,'').trim());
+    box.innerHTML = `
+      <div class="translation-box">
+        <div class="translation-lang">${lang}</div>
+        <div class="translation-word">${t.parola_tradotta}</div>
+        <div class="translation-def">${t.definizione}</div>
+        <div class="section-label" style="margin-bottom:0.5rem">Esempi</div>
+        ${t.esempi.map((e,i)=>`<div class="translation-example"><span>${i+1}.</span><span>${e}</span></div>`).join('')}
+      </div>`;
+  } catch(e) {
+    box.innerHTML = `<div class="error" style="padding:0.8rem 0">Traduzione non disponibile. Riprova.</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Traduci';
+  }
 }
 
 // ---- FAVORITES ----

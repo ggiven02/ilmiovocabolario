@@ -17,6 +17,42 @@ export default async (request) => {
   try {
     const body = await request.json();
 
+    // Special route: Wiktionary pronunciation lookup
+    if (body.wiktionary) {
+      const word = body.wiktionary.toLowerCase().trim();
+      const wikiUrl = `https://it.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(word)}&prop=wikitext&format=json&origin=*`;
+      const wikiRes = await fetch(wikiUrl);
+      const wikiData = await wikiRes.json();
+      
+      let pronuncia = null;
+
+      if (wikiData.parse && wikiData.parse.wikitext) {
+        const text = wikiData.parse.wikitext['*'];
+        
+        // Try to extract IPA pronunciation
+        const ipaMatch = text.match(/\{\{IPA\|([^}]+)\}\}/);
+        if (ipaMatch) {
+          pronuncia = ipaMatch[1].replace(/\//g, '').trim();
+        }
+
+        // Try to extract syllabification (sillabazione)
+        const sillabaMatch = text.match(/sill[^=]*=\s*([^\n|}\]]+)/i) ||
+                             text.match(/\{\{sill\|([^}]+)\}\}/i) ||
+                             text.match(/sillabazione[^\n]*\n[^=]*?([a-zàáèéìíòóùú·\-]+(?:[·\-][a-zàáèéìíòóùú]+)+)/i);
+        
+        if (sillabaMatch) {
+          // Convert middle dots or other separators to hyphens
+          pronuncia = sillabaMatch[1].replace(/·/g, '-').trim();
+        }
+      }
+
+      return new Response(JSON.stringify({ pronuncia }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+
+    // Normal AI route
     const groqBody = {
       model: 'llama-3.3-70b-versatile',
       max_tokens: body.max_tokens || 2000,
@@ -37,32 +73,21 @@ export default async (request) => {
     });
 
     clearTimeout(timeout);
-
     const data = await response.json();
 
     const converted = {
-      content: [
-        {
-          type: 'text',
-          text: data.choices?.[0]?.message?.content || ''
-        }
-      ]
+      content: [{ type: 'text', text: data.choices?.[0]?.message?.content || '' }]
     };
 
     return new Response(JSON.stringify(converted), {
       status: response.status,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      }
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
+
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      }
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
   }
 };

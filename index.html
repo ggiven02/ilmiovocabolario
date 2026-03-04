@@ -492,11 +492,12 @@ Rispondi SOLO con JSON valido senza markdown:
     } else {
       prompt = `Sei un professore di italiano. Crea un quiz di 10 domande su parole italiane rare, letterarie o arcaiche (non parole comuni).
 
-Ogni domanda: 3 opzioni (A,B,C), una corretta. Le opzioni errate devono essere plausibili. La risposta giusta in posizione casuale.
+Ogni domanda: 3 opzioni (A,B,C), una corretta. Le opzioni errate devono essere plausibili.
+IMPORTANTE: distribuisci le risposte corrette in modo vario — circa 3-4 volte in posizione 0 (A), 3-4 volte in posizione 1 (B), 3-4 volte in posizione 2 (C). NON mettere la risposta corretta sempre in posizione 0.
 
 Rispondi SOLO con JSON valido senza markdown:
 {"domande":[{"parola":"...","opzioni":["...","...","..."],"corretta":0,"spiegazione":"..."}]}
-- corretta: indice 0/1/2
+- corretta: indice 0/1/2 della risposta giusta (varia obbligatoriamente tra 0, 1 e 2)
 - spiegazione: 1 frase`;
     }
     const res = await fetch("/api/claude", {

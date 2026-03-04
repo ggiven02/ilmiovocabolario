@@ -282,6 +282,66 @@ button.secondary:hover { border-color: var(--gold); color: var(--gold); }
 .translation-example span:first-child { color: var(--gold); font-size: 0.73rem; margin-top: 0.25rem; flex-shrink: 0; }
 .translation-example span:last-child { font-style: italic; }
 
+/* SPLASH SCREEN */
+#splash-screen {
+  position: fixed; inset: 0; z-index: 999;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  padding: 2rem;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+#splash-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+.splash-inner { text-align: center; width: 100%; max-width: 420px; }
+
+.splash-ornament {
+  font-size: 2.5rem; color: var(--gold); opacity: 0.8; margin-bottom: 1.2rem;
+  animation: splashPulse 2s ease-in-out infinite;
+}
+.splash-title {
+  font-family: 'Playfair Display', serif; font-size: clamp(2rem, 6vw, 2.8rem);
+  font-weight: 700; color: var(--parchment); letter-spacing: 0.03em;
+  margin-bottom: 0.3rem;
+}
+.splash-subtitle {
+  font-size: 0.75rem; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 2.5rem; opacity: 0.8;
+}
+
+.splash-bar-wrap { margin-bottom: 0.6rem; }
+.splash-bar-track {
+  width: 100%; height: 2px; background: rgba(245,238,220,0.12);
+  border-radius: 2px; overflow: hidden; margin-bottom: 0.5rem;
+}
+.splash-bar-fill {
+  height: 100%; width: 0%; background: var(--gold);
+  border-radius: 2px; transition: width 0.12s ease;
+  box-shadow: 0 0 8px rgba(184,134,11,0.6);
+}
+.splash-pct {
+  font-family: 'Playfair Display', serif; font-size: 0.85rem;
+  color: var(--gold); letter-spacing: 0.1em; opacity: 0.7;
+  text-align: right;
+}
+
+.splash-fact {
+  margin-top: 2rem; min-height: 3.5rem;
+  font-family: 'Crimson Pro', serif; font-size: 1rem;
+  color: rgba(245,238,220,0.65); line-height: 1.65;
+  font-style: italic; letter-spacing: 0.01em;
+  animation: factFade 0.5s ease both;
+}
+.splash-fact strong { color: var(--gold); font-style: normal; }
+
+@keyframes splashPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+@keyframes factFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* WELCOME SCREEN */
 #welcome-screen {
   min-height: 100vh; display: flex; align-items: center; justify-content: center;
@@ -330,6 +390,22 @@ button.secondary:hover { border-color: var(--gold); color: var(--gold); }
 </style>
 </head>
 <body>
+<!-- SPLASH SCREEN -->
+<div id="splash-screen">
+  <div class="splash-inner">
+    <div class="splash-ornament">❧</div>
+    <div class="splash-title">Parola del Giorno</div>
+    <div class="splash-subtitle">Vocabolario quotidiano</div>
+    <div class="splash-bar-wrap">
+      <div class="splash-bar-track">
+        <div class="splash-bar-fill" id="splashFill"></div>
+      </div>
+      <div class="splash-pct" id="splashPct">0%</div>
+    </div>
+    <div class="splash-fact" id="splashFact"></div>
+  </div>
+</div>
+
 <!-- WELCOME SCREEN -->
 <div id="welcome-screen">
   <div class="welcome-box">
@@ -395,6 +471,83 @@ button.secondary:hover { border-color: var(--gold); color: var(--gold); }
 
 </div>
 <script>
+// ---- SPLASH SCREEN ----
+const facts = [
+  "Sapevi che? Il <strong>cinese mandarino</strong> è la lingua più parlata al mondo con oltre 900 milioni di madrelingua.",
+  "Sapevi che? La parola <strong>«serendipità»</strong> fu inventata dallo scrittore Horace Walpole nel 1754, ispirandosi a una fiaba persiana.",
+  "Sapevi che? In <strong>giapponese</strong> esistono tre alfabeti diversi usati contemporaneamente nello stesso testo.",
+  "Sapevi che? Il <strong>linguaggio dei fischi</strong> Silbo Gomero, usato alle Isole Canarie, è stato riconosciuto patrimonio UNESCO.",
+  "Sapevi che? La lingua con il maggior numero di parlanti nativi in Europa è il <strong>russo</strong>, non l'inglese.",
+  "Sapevi che? Il <strong>greco moderno</strong> ha una continuità scritta di oltre 3.000 anni, la più lunga del mondo occidentale.",
+  "Sapevi che? In <strong>italiano</strong> esistono oltre 500.000 parole, ma un parlante medio ne usa solo circa 2.000 nella vita quotidiana.",
+  "Sapevi che? La parola <strong>«pizza»</strong> appare per la prima volta in un documento scritto a Gaeta nel 997 d.C.",
+  "Sapevi che? Il <strong>sanscrito</strong>, lingua sacra dell'India antica, ha influenzato oltre la metà delle lingue parlate oggi nel mondo.",
+  "Sapevi che? In <strong>islandese</strong> si usano ancora parole medievali nella vita di tutti i giorni, quasi invariate da mille anni.",
+  "Sapevi che? La lingua <strong>basca</strong> è un «isolato linguistico»: non ha alcuna parentela con nessun'altra lingua conosciuta.",
+  "Sapevi che? Il <strong>Toki Pona</strong>, una lingua artificiale creata nel 2001, ha solo 137 parole ma riesce a esprimere qualsiasi concetto.",
+  "Sapevi che? In <strong>arabo</strong> la stessa radice di tre consonanti può generare decine di parole con significati correlati.",
+  "Sapevi che? La <strong>Divina Commedia</strong> di Dante ha contribuito a formare l'italiano moderno più di qualsiasi altro testo della storia.",
+  "Sapevi che? Il <strong>finlandese</strong> non ha preposizioni: usa invece dei suffissi aggiunti alle parole per indicare luogo e direzione.",
+  "Sapevi che? Esistono circa <strong>7.000 lingue</strong> nel mondo, ma si stima che il 90% di esse scompaia entro la fine del secolo.",
+  "Sapevi che? La parola italiana <strong>«ciao»</strong> deriva dal veneziano «s-ciào», che significava «sono il tuo schiavo».",
+  "Sapevi che? In <strong>swahili</strong>, lingua franca di gran parte dell'Africa orientale, oltre il 30% del vocabolario ha origini arabe.",
+  "Sapevi che? Il <strong>vietnamita</strong> è una lingua tonale con 6 toni diversi: la stessa sillaba con toni diversi ha significati completamente diversi.",
+  "Sapevi che? La <strong>lingua dei segni</strong> non è universale: ogni paese ha la propria, con grammatica e vocabolario distinti."
+];
+
+function runSplash(onComplete) {
+  const fill = document.getElementById('splashFill');
+  const pct = document.getElementById('splashPct');
+  const factEl = document.getElementById('splashFact');
+
+  // Pick 2 random facts to show during loading
+  const shuffled = [...facts].sort(() => Math.random() - 0.5);
+  let factIndex = 0;
+
+  function showFact(i) {
+    factEl.style.animation = 'none';
+    factEl.offsetHeight; // reflow
+    factEl.style.animation = 'factFade 0.5s ease both';
+    factEl.innerHTML = shuffled[i % shuffled.length];
+  }
+
+  showFact(0);
+
+  let current = 0;
+  const target = 100;
+  const duration = 2200; // ms total
+  const steps = 60;
+  const interval = duration / steps;
+
+  // Easing: fast at start, slow at end
+  let step = 0;
+  const timer = setInterval(() => {
+    step++;
+    // Ease out cubic
+    const progress = step / steps;
+    const eased = 1 - Math.pow(1 - progress, 3);
+    current = Math.round(eased * target);
+    fill.style.width = current + '%';
+    pct.textContent = current + '%';
+
+    // Change fact halfway
+    if (step === Math.floor(steps * 0.55)) {
+      showFact(1);
+    }
+
+    if (step >= steps) {
+      clearInterval(timer);
+      current = 100;
+      fill.style.width = '100%';
+      pct.textContent = '100%';
+      setTimeout(() => {
+        document.getElementById('splash-screen').classList.add('hidden');
+        setTimeout(onComplete, 600);
+      }, 400);
+    }
+  }, interval);
+}
+
 // ---- WELCOME ----
 function saveName() {
   const input = document.getElementById('nameInput');
@@ -414,15 +567,15 @@ function showApp(name) {
 
 // Check if name already saved
 const savedName = localStorage.getItem('vocabUserName');
-if (savedName) {
-  showApp(savedName);
-} else {
-  document.getElementById('welcome-screen').style.display = 'flex';
-  document.addEventListener('DOMContentLoaded', () => {
+runSplash(() => {
+  if (savedName) {
+    showApp(savedName);
+  } else {
+    document.getElementById('welcome-screen').style.display = 'flex';
     const inp = document.getElementById('nameInput');
     if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
-  });
-}
+  }
+});
 
 const state = {
   usedWords: [],

@@ -622,7 +622,7 @@ function renderWord(w) {
   document.getElementById('content').innerHTML = `
     <div class="anim">
       <div class="word-section">
-        <div class="word">${w.parola.replace(/-/g, '')}</div>
+        <div class="word">${w.parola.replace(/-/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')}</div>
         <div class="category">${w.categoria}</div>
         ${w.pronuncia ? `<div class="pronunciation">${w.pronuncia}</div>` : ''}
         <div class="etymology">${w.etimologia}</div>

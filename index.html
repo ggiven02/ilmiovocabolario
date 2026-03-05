@@ -660,12 +660,12 @@ function renderWord(w) {
         <div class="etymology">${w.etimologia}</div>
       </div>
       <div class="divider">· · ·</div>
-      <div><div class="section-label">Definizione</div><div class="definition">${w.definizione}</div></div>
+      <div><div class="section-label">Definizione</div><div class="definition">${w.definizione.replace(/([a-zàèìòùáéíóúA-Z])-([a-zàèìòùáéíóúA-Z])/g, '$1$2')}</div></div>
       <div class="examples">
         <div class="section-label">Esempi d'uso</div>
         ${w.esempi.map((e,i)=>`<div class="example"><span class="example-num">${i+1}.</span><span class="example-text">${e.replace(/([a-zàèìòùáéíóúA-Z])-([a-zàèìòùáéíóúA-Z])/g, '$1$2')}</span></div>`).join('')}
       </div>
-      ${w.nota ? `<div class="note">${w.nota}</div>` : ''}
+      ${w.nota ? `<div class="note"><div class="section-label" style="margin-bottom:0.4rem">Note</div>${w.nota.replace(/([a-zàèìòùáéíóúA-Z])-([a-zàèìòùáéíóúA-Z])/g, '$1$2')}</div>` : ''}
       <div class="translate-row">
         <span class="translate-label">Traduci in</span>
         <select class="lang-select" id="langSelect" onchange="document.getElementById('translateBtn').disabled=!this.value">

@@ -43,6 +43,10 @@ nav {
   border-right: 1px solid var(--parchment-dark);
 }
 .nav-btn:last-child { border-right: none; }
+.nav-donate {
+  text-decoration: none; display: flex; align-items: center; justify-content: center;
+  color: var(--gold) !important;
+}
 .nav-btn:hover { background: var(--parchment); color: var(--ink); }
 .nav-btn.active { background: var(--ink); color: var(--parchment); }
 .badge {
@@ -443,6 +447,7 @@ button.secondary:hover { border-color: var(--gold); color: var(--gold); }
     <button class="nav-btn" onclick="showSection('favs')" id="nav-favs">★ Preferiti <span class="badge" id="fav-badge">0</span></button>
     <button class="nav-btn" onclick="showSection('quiz')" id="nav-quiz">✎ Quiz</button>
     <button class="nav-btn" onclick="showSection('stats')" id="nav-stats">◎ Stats</button>
+    <a class="nav-btn nav-donate" href="https://www.paypal.me/GabrieleDato13/1" target="_blank" rel="noopener">☕ Caffè</a>
   </nav>
 
   <!-- WORD -->

@@ -663,7 +663,7 @@ function renderWord(w) {
       <div><div class="section-label">Definizione</div><div class="definition">${w.definizione}</div></div>
       <div class="examples">
         <div class="section-label">Esempi d'uso</div>
-        ${w.esempi.map((e,i)=>`<div class="example"><span class="example-num">${i+1}.</span><span class="example-text">${e}</span></div>`).join('')}
+        ${w.esempi.map((e,i)=>`<div class="example"><span class="example-num">${i+1}.</span><span class="example-text">${e.replace(/([a-zàèìòùáéíóúA-Z])-([a-zàèìòùáéíóúA-Z])/g, '$1$2')}</span></div>`).join('')}
       </div>
       ${w.nota ? `<div class="note">${w.nota}</div>` : ''}
       <div class="translate-row">

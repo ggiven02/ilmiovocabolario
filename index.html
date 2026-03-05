@@ -70,7 +70,17 @@ header { text-align: center; margin-bottom: 2rem; animation: fadeDown 0.7s ease 
 }
 
 /* WORD */
-.word-section { text-align: center; margin-bottom: 1.6rem; }
+.word-section { text-align: center; margin-bottom: 1.6rem; position: relative; }
+.word-row { display: flex; align-items: center; justify-content: center; gap: 0.7rem; }
+.speak-btn {
+  background: none; border: 1px solid var(--parchment-dark); border-radius: 50%;
+  width: 2.2rem; height: 2.2rem; cursor: pointer; color: var(--gold);
+  font-size: 1rem; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; flex-shrink: 0; padding: 0;
+}
+.speak-btn:hover { border-color: var(--gold); background: rgba(184,134,11,0.07); }
+.speak-btn.speaking { border-color: var(--gold); background: rgba(184,134,11,0.12); animation: speakPulse 0.8s ease infinite; }
+@keyframes speakPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
 .word { font-family: 'Playfair Display', serif; font-size: clamp(2.2rem,6vw,3.2rem); font-weight: 700; color: var(--ink); line-height: 1.1; }
 .category { font-size: 0.88rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--red); margin-top: 0.5rem; font-style: italic; }
 .pronunciation { font-size: 1.2rem; color: #5a4020; letter-spacing: 0.15em; margin-top: 0.4rem; font-variant: small-caps; }
@@ -636,7 +646,10 @@ function renderWord(w) {
   document.getElementById('content').innerHTML = `
     <div class="anim">
       <div class="word-section">
-        <div class="word">${w.parola.replace(/-/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')}</div>
+        <div class="word-row">
+          <div class="word">${w.parola.replace(/-/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')}</div>
+          <button class="speak-btn" onclick="speakWord()" title="Ascolta la pronuncia">🔊</button>
+        </div>
         <div class="category">${w.categoria}</div>
         ${w.pronuncia ? `<div class="pronunciation">${w.pronuncia}${w.pronuncia_fonte ? ` <span style="font-size:0.6rem;letter-spacing:0.15em;opacity:0.5;font-variant:normal;text-transform:uppercase"> · ${w.pronuncia_fonte}</span>` : ''}</div>` : ''}
         <div class="etymology">${w.etimologia}</div>
@@ -677,6 +690,36 @@ function renderWord(w) {
         </button>
       </div>
     </div>`;
+}
+
+function speakWord() {
+  if (!state.currentWord) return;
+  if (!window.speechSynthesis) return;
+
+  // Stop if already speaking
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+    document.querySelector('.speak-btn')?.classList.remove('speaking');
+    return;
+  }
+
+  const parola = state.currentWord.parola.replace(/-/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const utterance = new SpeechSynthesisUtterance(parola);
+  utterance.lang = 'it-IT';
+  utterance.rate = 0.85;
+  utterance.pitch = 1;
+
+  // Try to find an Italian voice
+  const voices = window.speechSynthesis.getVoices();
+  const italianVoice = voices.find(v => v.lang.startsWith('it'));
+  if (italianVoice) utterance.voice = italianVoice;
+
+  const btn = document.querySelector('.speak-btn');
+  if (btn) btn.classList.add('speaking');
+  utterance.onend = () => { if (btn) btn.classList.remove('speaking'); };
+  utterance.onerror = () => { if (btn) btn.classList.remove('speaking'); };
+
+  window.speechSynthesis.speak(utterance);
 }
 
 function toggleFav() {

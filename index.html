@@ -452,6 +452,9 @@ button.secondary:hover { border-color: var(--gold); color: var(--gold); }
 
   <!-- WORD -->
   <div id="section-word">
+    <div class="btn-wrap" style="margin-bottom:1rem;margin-top:0">
+      <button class="primary" id="newWordBtn" onclick="loadWord()" disabled>➡️ Prossima parola</button>
+    </div>
     <div class="card">
       <div id="content">
         <div class="loading">
@@ -459,9 +462,6 @@ button.secondary:hover { border-color: var(--gold); color: var(--gold); }
           <p>Ricercando una parola rara…</p>
         </div>
       </div>
-    </div>
-    <div class="btn-wrap">
-      <button class="primary" id="newWordBtn" onclick="loadWord()" disabled>Un'altra parola</button>
     </div>
   </div>
 

@@ -699,32 +699,43 @@ function renderWord(w) {
 
 function speakWord() {
   if (!state.currentWord) return;
-  if (!window.speechSynthesis) return;
 
-  // Stop if already speaking
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.cancel();
-    document.querySelector('.speak-btn')?.classList.remove('speaking');
+  const parola = state.currentWord.parola.replace(/-/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const btn = document.querySelector('.speak-btn');
+
+  // Stop if already playing
+  if (window._ttsAudio && !window._ttsAudio.paused) {
+    window._ttsAudio.pause();
+    window._ttsAudio.currentTime = 0;
+    if (btn) btn.classList.remove('speaking');
     return;
   }
 
-  const parola = state.currentWord.parola.replace(/-/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const utterance = new SpeechSynthesisUtterance(parola);
-  utterance.lang = 'it-IT';
-  utterance.rate = 0.85;
-  utterance.pitch = 1;
-
-  // Try to find an Italian voice
-  const voices = window.speechSynthesis.getVoices();
-  const italianVoice = voices.find(v => v.lang.startsWith('it'));
-  if (italianVoice) utterance.voice = italianVoice;
-
-  const btn = document.querySelector('.speak-btn');
   if (btn) btn.classList.add('speaking');
-  utterance.onend = () => { if (btn) btn.classList.remove('speaking'); };
-  utterance.onerror = () => { if (btn) btn.classList.remove('speaking'); };
 
-  window.speechSynthesis.speak(utterance);
+  // Google Translate TTS (primary)
+  const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=it&client=tw-ob&q=${encodeURIComponent(parola)}`;
+  const audio = new Audio(url);
+  window._ttsAudio = audio;
+  audio.playbackRate = 0.9;
+
+  audio.onended = () => { if (btn) btn.classList.remove('speaking'); };
+  audio.onerror = () => {
+    // Fallback to Web Speech API if Google blocks
+    if (btn) btn.classList.remove('speaking');
+    if (!window.speechSynthesis) return;
+    const utterance = new SpeechSynthesisUtterance(parola);
+    utterance.lang = 'it-IT';
+    utterance.rate = 0.85;
+    const voices = window.speechSynthesis.getVoices();
+    const italianVoice = voices.find(v => v.lang.startsWith('it'));
+    if (italianVoice) utterance.voice = italianVoice;
+    if (btn) btn.classList.add('speaking');
+    utterance.onend = () => { if (btn) btn.classList.remove('speaking'); };
+    window.speechSynthesis.speak(utterance);
+  };
+
+  audio.play().catch(() => audio.onerror());
 }
 
 function toggleFav() {
